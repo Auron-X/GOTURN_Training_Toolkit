@@ -1,0 +1,64 @@
+layer {
+   name: "inputData"
+   type: "HDF5Data"
+   top: "data1"
+   top: "data2"
+   top: "label"
+
+   hdf5_data_param {
+     batch_size: 100
+     source: "trainDatasets.txt"
+   }
+}
+
+layer {
+	name: "concat"
+	type: "Concat"
+	bottom: "data1"
+	bottom: "data2"
+	top: "data"
+}
+
+layer {
+  name: "ip1"
+  type: "InnerProduct"
+  bottom: "data"
+  top: "ip1"
+  inner_product_param {
+    num_output: 100
+  }
+}
+
+layer {
+  name: "relu"
+  type: "ReLU"
+  bottom: "ip1"
+  top: "ip1"
+}
+
+layer {
+  name: "ip2"
+  type: "InnerProduct"
+  bottom: "ip1"
+  top: "ip2"
+  inner_product_param {
+    num_output: 100
+  }
+}
+
+layer {
+  name: "relu1"
+  type: "ReLU"
+  bottom: "ip2"
+  top: "ip2"
+}
+
+layer {
+  name: "ip3"
+  type: "InnerProduct"
+  bottom: "ip2"
+  top: "ip3"
+  inner_product_param {
+    num_output: 1
+  }
+}
