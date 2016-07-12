@@ -6,6 +6,6 @@
 #include <opencv2\datasets\track_alov.hpp>
 #include <iostream>
 #include <caffe\caffe.hpp>
+#include <algorithm>
 
-
-void buildH5Datasets(int n, std::string fileName);
+void buildH5Datasets(std::string fileName);

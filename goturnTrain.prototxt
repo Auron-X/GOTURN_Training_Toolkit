@@ -10,7 +10,7 @@ layer {
     phase: TRAIN
   }
   hdf5_data_param {
-    batch_size: 256
+    batch_size: 32
     source: "trainDatasets.txt"
   }
 }

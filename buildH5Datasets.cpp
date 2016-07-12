@@ -7,26 +7,61 @@ using namespace caffe;
 #define INPUT_SIZE 227
 #define NUM_CHANNELS 3
 
-void buildH5Datasets(int N, string fileName)
+void buildH5Datasets(string fileName)
 {
 	//Create HDF5 database file
 	hid_t fileID = H5Fcreate(fileName.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
 
-	//Create DATA/LABEL pointers and allocate memory
-	int fullVolume = N * NUM_CHANNELS * INPUT_SIZE * INPUT_SIZE;
-	float* targetData = new float[fullVolume];
-	float* searchData = new float[fullVolume];
-	float* label = new float[N*4];
-
+	//Create DATA/LABEL pointers and allocate memory	
 	int width, height;
 	width = INPUT_SIZE;
 	height = INPUT_SIZE;
 	vector <vector <Mat>> targetPatchesSplitted;
 	vector <vector <Mat>> searchPatchesSplitted;
 
+	//Extract patches & lables
+	Mat prevFrame, currFrame;
+	Ptr<cv::datasets::TRACK_alov> alovDataset = cv::datasets::TRACK_alov::create();
+	vector <cv::gtr::TrainingSample> trainingSamples, tmpSamples;
+
+	alovDataset->loadAnnotatedOnly("D:/ALOV300++");
+	Rect2f prevGTBB, currGTBB;
+
+	int datasetID = 1;
+	cout << alovDataset->getDatasetLength(datasetID) << endl;
+
+	for (int i = 0; i < alovDataset->getDatasetLength(datasetID)-1; i++)
+	{
+		prevGTBB = gtr::anno2rect(alovDataset->getGT(datasetID, i + 1));
+		currGTBB = gtr::anno2rect(alovDataset->getGT(datasetID, i + 2));
+		alovDataset->getFrame(prevFrame, datasetID, i + 1);
+		alovDataset->getFrame(currFrame, datasetID, i + 2);
+		tmpSamples = gtr::gatherFrameSamples(prevFrame, currFrame, prevGTBB, currGTBB);
+		trainingSamples.insert(trainingSamples.end(), tmpSamples.begin(), tmpSamples.end());
+	}
+	int N = trainingSamples.size();
+	cout << "Dataset Size = " << N << endl;
+
+	//Shuffle data
+	random_shuffle(trainingSamples.begin(), trainingSamples.end());
+
+	/*for (int i = 0; i < trainingSamples.size(); i++)
+	{
+		cv::gtr::TrainingSample  sample = trainingSamples[i];
+		rectangle(sample.searchPatch, sample.targetBB, Scalar(0, 0, 255));
+		imshow("1", sample.targetPatch);
+		imshow("2", sample.searchPatch);
+		waitKey();
+	}*/
+
 	//Warp DATA/LABEL pointers to their data
+	int fullVolume = N * NUM_CHANNELS * INPUT_SIZE * INPUT_SIZE;
+	float* targetData = new float[fullVolume];
+	float* searchData = new float[fullVolume];
+	float* label = new float[N * 4];	
 	float* pointer;
 	int offset = 0;
+
 	for (int i = 0; i < N; i++)
 	{
 		offset = i*NUM_CHANNELS*INPUT_SIZE*INPUT_SIZE;
@@ -52,13 +87,28 @@ void buildH5Datasets(int N, string fileName)
 		searchPatchesSplitted.push_back(searchPatchSplitted);
 	}
 
-	//Extract patches & lables
-	vector <cv::gtr::TrainingSample> trainingSamples;
-	
-
+	//Split channels and map to the DATA/LABELS 
 	for (int i = 0; i < N; i++)
 	{
+		Mat targetPatch, searchPatch;
+		Rect2f relBB;
+		targetPatch = trainingSamples[i].targetPatch;
+		searchPatch = trainingSamples[i].searchPatch;
+		relBB = trainingSamples[i].targetBB;
 
+		//Preprocess
+		resize(targetPatch, targetPatch, Size(INPUT_SIZE, INPUT_SIZE));
+		resize(searchPatch, searchPatch, Size(INPUT_SIZE, INPUT_SIZE));
+		
+		//Split data to mapped memory
+		split(targetPatch, targetPatchesSplitted[i]);
+		split(searchPatch, searchPatchesSplitted[i]);
+
+		//Labels mapping
+		label[i * 4] = relBB.x;
+		label[i * 4 + 1] = relBB.y;
+		label[i * 4 + 2] = relBB.width;
+		label[i * 4 + 3] = relBB.height;
 	}
 
 	int numAxes = 4;
