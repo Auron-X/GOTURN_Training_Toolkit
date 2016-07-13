@@ -12,7 +12,7 @@ void buildH5Datasets(string fileName)
 	//Create HDF5 database file
 	hid_t fileID = H5Fcreate(fileName.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
 
-	//Create DATA/LABEL pointers and allocate memory	
+	//Create DATA/LABEL pointers and allocate memory
 	int width, height;
 	width = INPUT_SIZE;
 	height = INPUT_SIZE;
@@ -40,7 +40,7 @@ void buildH5Datasets(string fileName)
 		trainingSamples.insert(trainingSamples.end(), tmpSamples.begin(), tmpSamples.end());
 	}
 	int N = trainingSamples.size();
-	cout << "Dataset Size = " << N << endl;
+
 
 	//Shuffle data
 	random_shuffle(trainingSamples.begin(), trainingSamples.end());
@@ -58,7 +58,7 @@ void buildH5Datasets(string fileName)
 	int fullVolume = N * NUM_CHANNELS * INPUT_SIZE * INPUT_SIZE;
 	float* targetData = new float[fullVolume];
 	float* searchData = new float[fullVolume];
-	float* label = new float[N * 4];	
+	float* labelData = new float[N * 4];
 	float* pointer;
 	int offset = 0;
 
@@ -87,7 +87,7 @@ void buildH5Datasets(string fileName)
 		searchPatchesSplitted.push_back(searchPatchSplitted);
 	}
 
-	//Split channels and map to the DATA/LABELS 
+	//Split channels and map to the DATA/LABELS
 	for (int i = 0; i < N; i++)
 	{
 		Mat targetPatch, searchPatch;
@@ -96,19 +96,32 @@ void buildH5Datasets(string fileName)
 		searchPatch = trainingSamples[i].searchPatch;
 		relBB = trainingSamples[i].targetBB;
 
+		//Scale parameters
+		float dx = (float)INPUT_SIZE / searchPatch.cols;
+		float dy = (float)INPUT_SIZE / searchPatch.rows;
+		cout << dx <<  "   " << dy << endl;
 		//Preprocess
+		//Resize
 		resize(targetPatch, targetPatch, Size(INPUT_SIZE, INPUT_SIZE));
 		resize(searchPatch, searchPatch, Size(INPUT_SIZE, INPUT_SIZE));
-		
+
+		//Mean Subtract
+		targetPatch = targetPatch-128;
+		searchPatch = searchPatch-128;
+
+		//Convert to Float type
+		targetPatch.convertTo(targetPatch, CV_32FC1);
+		searchPatch.convertTo(searchPatch, CV_32FC1);
+
 		//Split data to mapped memory
 		split(targetPatch, targetPatchesSplitted[i]);
 		split(searchPatch, searchPatchesSplitted[i]);
 
 		//Labels mapping
-		label[i * 4] = relBB.x;
-		label[i * 4 + 1] = relBB.y;
-		label[i * 4 + 2] = relBB.width;
-		label[i * 4 + 3] = relBB.height;
+		labelData[i * 4] = dx * relBB.x;
+		labelData[i * 4 + 1] = dy * relBB.y;
+		labelData[i * 4 + 2] = dx * relBB.width;
+		labelData[i * 4 + 3] = dy * relBB.height;
 	}
 
 	int numAxes = 4;
@@ -125,7 +138,7 @@ void buildH5Datasets(string fileName)
 	dims[0] = N;
 	dims[1] = 4;
 
-	H5LTmake_dataset_float(fileID, "label", numAxes, dims, label);
+	H5LTmake_dataset_float(fileID, "label", numAxes, dims, labelData);
 
 	delete[] dims;
 

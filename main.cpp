@@ -13,9 +13,16 @@ using namespace caffe;
 
 void main()
 {
-	
-	buildDB();
-	trainNet();
+	//Turn on GPU mode for Caffe
+	Caffe::set_mode(Caffe::GPU);
+
+	//Extract training samples, Convert and Save them to HDF5 dataset
+	//buildDB();
+
+	//Train GOTURN
+	//trainNet();
+
+	//Test GOTURN *
 	testNet();
 
 	getchar();
