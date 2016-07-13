@@ -1,11 +1,13 @@
 net: "goturnTrain.prototxt"
 
-base_lr: 0.001
-lr_policy: "fixed"
-display: 1
-max_iter: 450000
+base_lr: 0.000001
+lr_policy: "step"
+stepsize: 500
+gamma: 1
+display: 10
+max_iter:10000
 momentum: 0.9
-weight_decay: 0.0005
-snapshot: 10000
-snapshot_prefix: "goturn_train"
+weight_decay: 0.001
+snapshot: 1000
+snapshot_prefix: "goturn"
 solver_mode: GPU
