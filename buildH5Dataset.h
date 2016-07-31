@@ -8,4 +8,4 @@
 #include <caffe\caffe.hpp>
 #include <algorithm>
 
-void buildH5Datasets(std::string fileName);
+void buildH5Datasets(std::string fileName, int samplesNum);
