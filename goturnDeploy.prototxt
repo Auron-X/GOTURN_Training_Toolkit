@@ -8,7 +8,7 @@ layer {
   top: "label"
   hdf5_data_param {
     batch_size: 100
-    source: "trainDatasets.txt"
+    source: "testDatasets.txt"
   }
 }
 layer {
@@ -571,5 +571,16 @@ layer {
       type: "constant"
       value: 0
     }
+  }
+}
+layer {
+  name: "layer"
+  bottom: "fc8"
+  top: "out"
+  type: "Power"
+  power_param {
+    power: 1
+    scale: 10
+    shift: 0
   }
 }

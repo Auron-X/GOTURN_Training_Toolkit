@@ -10,8 +10,9 @@ layer {
     phase: TRAIN
   }
   hdf5_data_param {
-    batch_size: 16
+    batch_size: 40
     source: "trainDatasets.txt"
+	shuffle: true
   }
 }
 layer {
@@ -24,8 +25,9 @@ layer {
     phase: TEST
   }
   hdf5_data_param {
-    batch_size: 50
+    batch_size: 40
     source: "testDatasets.txt"
+	shuffle: true
   }
 }
 layer {
@@ -591,9 +593,20 @@ layer {
   }
 }
 layer {
- name: 'loss'
- type: "EuclideanLoss"
- bottom: 'fc8'
- bottom: 'label'
- top: 'loss'
-};
+  name: "layer"
+  bottom: "fc8"
+  top: "out"
+  type: "Power"
+  power_param {
+    power: 1
+    scale: 10
+    shift: 0
+  }
+}
+layer {
+  name: "Loss"
+  type: "EuclideanLoss"
+  bottom: "out"
+  bottom: "label"
+  top: "loss"
+}
