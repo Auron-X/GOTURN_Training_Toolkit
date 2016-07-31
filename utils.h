@@ -6,5 +6,5 @@
 #include "buildH5Dataset.h"
 
 void trainNet();
-void testNet();
+void testNet(string modelPath);
 void buildDB();

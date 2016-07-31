@@ -75,25 +75,25 @@ void trainNet()
 			targetLayer[1]->blobs()[j]->FromProto(sourceLayer.blobs(j));
 		}*/
 
-		cout << "Replaced by: " << sourceLayer.name() << endl;
-		cout << "Replaced by: " << sourceLayer.name() << endl;
+		//cout << "Replaced by: " << sourceLayer.name() << endl;
+		//cout << "Replaced by: " << sourceLayer.name() << endl;
 	}
 
 	solver->Solve();
 }
 
-void testNet()
+void testNet(string modelPath)
 {
 	Caffe::set_mode(Caffe::GPU);
 	Net<float> net("goturnDeploy.prototxt", TEST);
-	net.CopyTrainedLayersFrom("goturn_iter_10000.caffemodel");
+	net.CopyTrainedLayersFrom(modelPath);
 
 	boost::shared_ptr<Blob <float>> data1Layer;
 	boost::shared_ptr<Blob <float>> data2Layer;
 	boost::shared_ptr<Blob <float>> labelLayer;
-	Blob <float>* outputLayer;
+	boost::shared_ptr<Blob <float>> outputLayer;
 
-	outputLayer = net.output_blobs()[0];
+	outputLayer = net.blob_by_name("out");
 	data1Layer = net.blob_by_name("data1");
 	data2Layer = net.blob_by_name("data2");
 	labelLayer = net.blob_by_name("label");
@@ -116,13 +116,13 @@ void testNet()
 		Rect2f gtbb, res_bb;
 		gtbb.x = label[k * 4 + 0];
 		gtbb.y = label[k * 4 + 1];
-		gtbb.width = label[k * 4 + 2];
-		gtbb.height = label[k * 4 + 3];
+		gtbb.width = label[k * 4 + 2] - label[k * 4 + 0];
+		gtbb.height = label[k * 4 + 3] - label[k * 4 + 1];
 
 		res_bb.x = out[k * 4 + 0];
 		res_bb.y = out[k * 4 + 1];
-		res_bb.width = out[k * 4 + 2];
-		res_bb.height = out[k * 4 + 3];
+		res_bb.width = out[k * 4 + 2] - out[k * 4 + 0];
+		res_bb.height = out[k * 4 + 3] - out[k * 4 + 1];
 
 		//Construct Target/Search patches from data1/data2
 		vector <Mat> channelsTargetPatch;
@@ -138,11 +138,15 @@ void testNet()
 			channelsSearchPatch.push_back(channelSearch);
 		}
 		//RGB -> BGR and Merge
-		reverse(channelsTargetPatch.begin(), channelsTargetPatch.end());
-		reverse(channelsSearchPatch.begin(), channelsSearchPatch.end());
+		//reverse(channelsTargetPatch.begin(), channelsTargetPatch.end());
+		//reverse(channelsSearchPatch.begin(), channelsSearchPatch.end());
 
 		merge(channelsTargetPatch, targetPatch);
 		merge(channelsSearchPatch, searchPatch);
+
+		//Add mean
+		targetPatch = targetPatch + 128;
+		searchPatch = searchPatch + 128;
 
 		targetPatch.convertTo(targetPatch, CV_8U);
 		searchPatch.convertTo(searchPatch, CV_8U);
@@ -158,6 +162,10 @@ void testNet()
 
 void buildDB()
 {
-	buildH5Datasets("trainDataset.h5");
-	buildH5Datasets("testDataset.h5");
+	//Generate training datasets
+	for (int i = 1; i <= 10; i++)
+	{
+		string fileName = "D:/ALOV300++/trainDataset_" + to_string(i) + ".h5";
+		buildH5Datasets(fileName, 500);
+	}
 }
