@@ -36,7 +36,11 @@ By default it generates 10 HDF5 datasets every with 500x10 samples (10 crop samp
 buildH5Datasets(datasetName, numberOfSamples)
 ```
 ### Training network
-Training is launched by
+GOTURN training requires a "bvlc_reference_caffenet.caffemodel" for GOTURN network weights inialization:
+
+http://dl.caffe.berkeleyvision.org/bvlc_reference_caffenet.caffemodel
+
+Training is launched by next line:
 ```
 trainNet()
 ```
@@ -54,5 +58,6 @@ First command generate a new small test dataset, and second launching a test pro
 ### Pretrained GOTURN model
 
 Also there is pretrained GOTURN model is available in OpenCV_extra repository
+
 https://github.com/opencv/opencv_extra
 
