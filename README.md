@@ -12,12 +12,6 @@ Original GOTURN paper:
 <br>
 European Conference on Computer Vision (ECCV), 2016 (In press)
 
-* [Installation](#installation)
-* [Building HDF5 dataset](#pretrained-model)
-* [Training network](#visualize-the-tracking-performance)
-* [Evaluate the tracker](#evaluate-the-tracker)
-* [Pretrained GOTURN model](#train-the-tracker)
-
 ## Installation
 
 ### Install dependencies:
